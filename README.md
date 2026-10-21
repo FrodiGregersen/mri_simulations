@@ -1,9 +1,7 @@
 # teaching-aids
 
-Feel free to use these for your own purposes - and to remix as you see fit! Crediting via URL appreciated.
-
-[https://dangallichan.github.io/teaching-aids/simContrast.html](
-https://dangallichan.github.io/teaching-aids/simContrast.html)
+This is a fork of [https://dangallichan.github.io/teaching-aids/simContrast.html](
+https://dangallichan.github.io/teaching-aids/simContrast.html) with small modifications.
 
 
 
