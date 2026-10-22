@@ -146,7 +146,9 @@
   .eq i { font-style: italic; }
   .eq sub, .eq sup { font-size: .72em; }
   .eq .off { opacity: .35; }
-  .eq .cap { display: block; font: var(--fs) system-ui, sans-serif; color: var(--ink-3); margin-top: 6px; }
+  .eq .eqsub { display: block; font-size: 1em; margin-top: 6px; opacity: .9; }
+  .eq .cap { display: block; font: var(--fs) system-ui, sans-serif; color: var(--ink-3); margin-bottom: 6px; }
+  .eq { display: block; }
   .chart { position: relative; width: 100%; height: 340px; flex: none; }
   .chart.short { height: 250px; }
   .chart svg { display: block; position: absolute; left: 0; top: 0; }
@@ -822,24 +824,37 @@ $('reroll').addEventListener('click', () => { reseed((Math.random() * 2 ** 31) |
 // ---------- signal-equation info popups (hover on desktop, tap-toggle everywhere) ----------
 // M_0 is the equilibrium magnetisation (M_0 ∝ PD): the equations factor it out properly
 // instead of writing "PD · M_z", which would double-count. Grayed M_0 means M_0 = 1 (PD not included).
+// Steady-state magnetisation after the (TR-1/2 alpha) segment, fully expanded for both modes
 const Mss = s => s.useInversion
-  ? `<i>M</i><sub>ss</sub>(<i>TI</i>)`
-  : `<span style="white-space:nowrap">(1 \u2212 e<sup>\u2212<i>TR</i>/<i>T1</i></sup>) / (1 \u2212 cos\u202F<i>\u03B1</i>\u202F\u00B7 e<sup>\u2212<i>TR</i>/<i>T1</i></sup>)</span>`;
+  ? `(1 \u2212 e<sup>\u2212(<i>TR</i>\u2212<i>TI</i>)/<i>T1</i></sup> + (1 \u2212 e<sup>\u2212<i>TI</i>/<i>T1</i></sup>)\u00B7cos(<i>\u03B1</i>)\u00B7e<sup>\u2212(<i>TR</i>\u2212<i>TI</i>)/<i>T1</i></sup>) / (1 + e<sup>\u2212<i>TR</i>/<i>T1</i></sup>\u00B7cos(<i>\u03B1</i>))`
+  : `<span style="white-space:nowrap">(1 \u2212 e<sup>\u2212<i>TR</i>/<i>T1</i></sup>) / (1 \u2212 cos(<i>\u03B1</i>)\u202F\u00B7 e<sup>\u2212<i>TR</i>/<i>T1</i></sup>)</span>`;
 const EQ = {
   // longitudinal recovery: PD sits inside the expression for M_z(t).
   // Only PD grays (when the Proton density box is off) — the relaxation terms are always what's plotted.
   t1: { terms: [
-    [s => `<i>M</i><sub><i>z</i></sub>(<i>t</i>) \u221D <span class="${s.fullT1 && s.usePD ? '' : 'off'}"><i>PD</i></span>\u00B7[1 \u2212 e<sup>\u2212<i>t</i>/<i>T1</i></sup> + ${Mss(s)}\u00B7cos\u202F<i>\u03B1</i>\u00B7e<sup>\u2212<i>t</i>/<i>T1</i></sup>]` + (s.useInversion ? ' \u00B7 sin\u202F<i>\u03B1</i>' : ''), () => true],
-  ], cap: s => s.useInversion ? 'longitudinal recovery after the inversion pulse' : 'longitudinal recovery after excitation' },
+    [s => s.useInversion
+      ? { main: `<i>M</i><sub><i>z</i></sub>(<i>t</i>) \u221D <span class="${s.fullT1 && s.usePD ? '' : 'off'}"><i>PD</i></span>\u00B7|<i>M</i><sub><i>z</i></sub>(<i>TI</i><sup>\u2212</sup>) \u2212 M<sub>ss</sub>\u00B7e<sup>\u2212<i>TI</i>/<i>T1</i></sup>|\u00B7[1 \u2212 e<sup>\u2212(<i>t</i>\u2212<i>TI</i>)/<i>T1</i></sup> + cos(<i>\u03B1</i>)\u00B7e<sup>\u2212(<i>t</i>\u2212<i>TI</i>)/<i>T1</i></sup>]\u00B7sin(<i>\u03B1</i>)`,
+          sub: [`<i>M</i><sub><i>z</i></sub>(<i>TI</i><sup>\u2212</sup>) = 1 \u2212 e<sup>\u2212<i>TI</i>/<i>T1</i></sup>`,
+                `<i>M</i><sub>ss</sub> = (1 \u2212 e<sup>\u2212(<i>TR</i>\u2212<i>TI</i>)/<i>T1</i></sup> + (1 \u2212 e<sup>\u2212<i>TI</i>/<i>T1</i></sup>)\u00B7cos(<i>\u03B1</i>)\u00B7e<sup>\u2212(<i>TR</i>\u2212<i>TI</i>)/<i>T1</i></sup>) / (1 + e<sup>\u2212<i>TR</i>/<i>T1</i></sup>\u00B7cos(<i>\u03B1</i>))`] }
+      : `<i>M</i><sub><i>z</i></sub>(<i>t</i>) \u221D <span class="${s.fullT1 && s.usePD ? '' : 'off'}"><i>PD</i></span>\u00B7[1 \u2212 e<sup>\u2212<i>t</i>/<i>T1</i></sup> + ${Mss(s)}\u00B7cos(<i>\u03B1</i>)\u00B7e<sup>\u2212<i>t</i>/<i>T1</i></sup>]`, () => true],
+  ], cap: s => s.useInversion ? 'Longitudinal recovery after the inversion pulse' : 'Longitudinal recovery after excitation' },
   flip: { terms: [
     ['<i>PD</i>', s => s.fullFlip && s.usePD],
-    [s => `sin\u202F<i>\u03B1</i>\u00B7${Mss(s)}`, () => true],
-  ], cap: 'signal vs flip angle at fixed TR' },
+    [s => s.useInversion
+      ? { main: `|<i>M</i><sub><i>z</i></sub>(<i>TI</i><sup>\u2212</sup>) \u2212 M<sub>ss</sub>\u00B7e<sup>\u2212<i>TI</i>/<i>T1</i></sup>|\u00B7sin(<i>\u03B1</i>)`,
+          sub: [`<i>M</i><sub><i>z</i></sub>(<i>TI</i><sup>\u2212</sup>) = 1 \u2212 e<sup>\u2212<i>TI</i>/<i>T1</i></sup>`,
+                `<i>M</i><sub>ss</sub> = (1 \u2212 e<sup>\u2212(<i>TR</i>\u2212<i>TI</i>)/<i>T1</i></sup> + (1 \u2212 e<sup>\u2212<i>TI</i>/<i>T1</i></sup>)\u00B7cos(<i>\u03B1</i>)\u00B7e<sup>\u2212(<i>TR</i>\u2212<i>TI</i>)/<i>T1</i></sup>) / (1 + e<sup>\u2212<i>TR</i>/<i>T1</i></sup>\u00B7cos(<i>\u03B1</i>))`] }
+      : `sin(<i>\u03B1</i>)\u00B7${Mss(s)}`, () => true],
+  ], cap: 'Signal vs flip angle at fixed TR' },
   te: { terms: [
     ['<i>PD</i>', s => s.fullTE && s.usePD],
-    [s => `sin\u202F<i>\u03B1</i>\u00B7${Mss(s)}`, s => s.fullTE],
+    [s => s.useInversion
+      ? { main: `|<i>M</i><sub><i>z</i></sub>(<i>TI</i><sup>\u2212</sup>) \u2212 M<sub>ss</sub>\u00B7e<sup>\u2212<i>TI</i>/<i>T1</i></sup>|\u00B7sin(<i>\u03B1</i>)`,
+          sub: [`<i>M</i><sub><i>z</i></sub>(<i>TI</i><sup>\u2212</sup>) = 1 \u2212 e<sup>\u2212<i>TI</i>/<i>T1</i></sup>`,
+                `<i>M</i><sub>ss</sub> = (1 \u2212 e<sup>\u2212(<i>TR</i>\u2212<i>TI</i>)/<i>T1</i></sup> + (1 \u2212 e<sup>\u2212<i>TI</i>/<i>T1</i></sup>)\u00B7cos(<i>\u03B1</i>)\u00B7e<sup>\u2212(<i>TR</i>\u2212<i>TI</i>)/<i>T1</i></sup>) / (1 + e<sup>\u2212<i>TR</i>/<i>T1</i></sup>\u00B7cos(<i>\u03B1</i>))`] }
+      : `sin(<i>\u03B1</i>)\u00B7${Mss(s)}`, s => s.fullTE],
     [s => `e<sup>\u2212<i>TE</i>/<i>T2</i>${s.seq === 'SE' ? '' : '*'} </sup>`, () => true],
-  ], cap: () => 'decay as a function of TE' },
+  ], cap: () => 'Decay as a function of TE' },
 };
 EQ.ted = EQ.te;                                   // phone T2 decay panel shares the TE equation
 const eqKey = { t1: 't1', flip: 'flip', te: 'te', ted: 'te' };
@@ -875,9 +890,15 @@ function updateEqPop(key) {
   const isT1 = key === 't1' || eqKey[key] === 't1';
   const lhs = isT1 ? '' : '<i>S</i> \u221D ';
   const joiner = isT1 ? '' : ' \u00B7 ';
-  pop.innerHTML = '<span class="eq">' + lhs +
-    E.terms.map(([html, on]) => `<span class="${on(state) ? '' : 'off'}">${val(html)}</span>`).join(joiner) +
-    `</span> <span class="cap">${val(E.cap)}</span>`;
+  // each term may be an object {main, sub}: main = equation line, sub = definition lines (one per array entry)
+  const parts = E.terms.map(([html, on]) => {
+    const t = val(html);
+    const main = typeof t === 'object' ? t.main : t;
+    const subs = typeof t === 'object' && t.sub ? (Array.isArray(t.sub) ? t.sub : [t.sub]) : [];
+    return `<span class="${on(state) ? '' : 'off'}">${main}${subs.map(d => `<span class="eqsub">${d}</span>`).join('')}</span>`;
+  });
+  pop.innerHTML = `<span class="cap">${val(E.cap)}</span> <span class="eq">` + lhs + parts.join(joiner) +
+    `</span>`;
 }
 // keep the open popup (if any) current on every render
 const _renderEq = render;
