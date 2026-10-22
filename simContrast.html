@@ -119,6 +119,7 @@
   .card {
     background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px;
     min-width: 0; min-height: 0; display: flex; flex-direction: column;
+    position: relative;   /* anchor .tip tooltips to the card, not the page */
   }
   .a-t1w, .a-t2w, .a-t2 { display: none; }                 /* bars are drawn inside the signal plots (separate cards only on phones) */
   .a-t1, .a-t1f, .a-t1w { background: var(--t1-bg); border-color: var(--t1-line); }
@@ -128,6 +129,24 @@
   .sw.dash { width: 18px; background: none !important; height: 0; border-top: 3px dashed var(--ink); border-radius: 0; }
   svg text.clabel { font-size: calc(var(--fs) - 1.5px); font-weight: 650; paint-order: stroke; stroke: var(--lblbg, var(--card)); stroke-width: 3.5px; stroke-linejoin: round; }
   .a-t1 .chart, .a-t1f .chart { --lblbg: var(--t1-bg); } .a-t2 .chart, .a-t2e .chart { --lblbg: var(--t2-bg); }
+  .card h2 { display: flex; align-items: baseline; gap: 10px; }
+  .a-t2e h2 { display: flex; align-items: baseline; gap: 10px; }
+  .chainlbl { color: var(--ink-2); font-size: .9em; display: inline-flex; align-items: center; gap: 4px; cursor: pointer; user-select: none; white-space: nowrap; }
+  /* circled-i signal-equation info icon + hover/tap popup */
+  .infowrap { position: relative; display: inline-flex; flex: none; margin-left: auto; }
+  .infoi { width: 15px; height: 15px; border: 1.5px solid var(--ink-3); border-radius: 50%; display: inline-flex; align-items: center; justify-content: center;
+           font: italic 700 .78em Georgia, 'Times New Roman', serif; color: var(--ink-2); cursor: help; user-select: none; }
+  .infoi:hover { border-color: var(--accent); color: var(--accent); }
+  .infopop { display: none; position: fixed; z-index: 30; left: -9999px; top: -9999px;   /* parked off-screen until positioned */
+             background: var(--card); color: var(--ink); border: 1px solid var(--line); border-radius: 8px;
+             padding: 7px 11px; box-shadow: 0 6px 18px rgba(0,0,0,.22); font-size: 1.05em;
+             width: max-content; max-width: min(560px, 92vw); }
+  .infowrap.open .infopop, .infowrap:hover .infopop { display: block; }
+  .eq { font-family: Georgia, 'Times New Roman', serif; }
+  .eq i { font-style: italic; }
+  .eq sub, .eq sup { font-size: .72em; }
+  .eq .off { opacity: .35; }
+  .eq .cap { display: block; font: var(--fs) system-ui, sans-serif; color: var(--ink-3); margin-top: 6px; }
   .chart { position: relative; width: 100%; height: 340px; flex: none; }
   .chart.short { height: 250px; }
   .chart svg { display: block; position: absolute; left: 0; top: 0; }
@@ -178,6 +197,8 @@
     .a-t1 h2, .a-t2 h2, .a-t1w h2, .a-t2w h2, .a-t1f h2, .a-t2e h2 { font-size: .85em; margin: 0 0 2px 4px; }
     .a-t1f h2 .par, .a-t2e h2 .par { display: none; }
     .a-t1 h2 .par, .a-t2 h2 .par { display: none; }
+    .chainlbl { font-size: .8em; gap: 3px; white-space: normal; text-align: right; }
+    .chainlbl input { flex: none; }
     .a-t1 h2::after, .a-t2 h2::after { content: ' (ms)'; color: var(--ink-3); }
     .a-t1 .chart, .a-t2 .chart, .a-t1w .chart, .a-t2w .chart, .a-t1f .chart, .a-t2e .chart { height: auto; flex: 1 1 0; min-height: 0; }
     .imgstats { font-size: .85em; margin-bottom: 4px; line-height: 1.35; }
@@ -293,11 +314,11 @@
   <div class="grid">
     <div class="left">
       <div class="card a-t1">
-        <h2 id="t1title"></h2>
+        <h2><span id="t1title"></span><span class="infowrap"><span class="infoi" data-info="t1">i</span><span class="infopop" data-pop="t1"></span></span><label class="chainlbl"><input type="checkbox" id="fullT1"> Include full signal equation</label></h2>
         <div class="chart" id="t1plot"></div>
       </div>
       <div class="card a-t1f">
-        <h2 id="t1ftitle"></h2>
+        <h2><span id="t1ftitle"></span><span class="infowrap"><span class="infoi" data-info="flip">i</span><span class="infopop" data-pop="flip"></span></span><label class="chainlbl"><input type="checkbox" id="fullFlip"> Include full signal equation</label></h2>
         <div class="chart" id="t1flip"></div>
       </div>
       <div class="card a-t1w">
@@ -309,11 +330,11 @@
         <div class="chart short" id="combBars"></div>
       </div>
       <div class="card a-t2">
-        <h2 id="t2title"></h2>
+        <h2><span id="t2title"></span><span class="infowrap"><span class="infoi" data-info="ted">i</span><span class="infopop" data-pop="ted"></span></span><label class="chainlbl"><input type="checkbox" id="fullTEd"> Include full signal equation</label></h2>
         <div class="chart" id="t2plot"></div>
       </div>
       <div class="card a-t2e">
-        <h2 id="t2etitle"></h2>
+        <h2><span id="t2etitle"></span><span class="infowrap"><span class="infoi" data-info="te">i</span><span class="infopop" data-pop="te"></span></span><label class="chainlbl"><input type="checkbox" id="fullTE"> Include full signal equation</label></h2>
         <div class="chart" id="t2te"></div>
       </div>
       <div class="card a-t2w">
@@ -366,7 +387,7 @@ const RELAX = {
 };
 
 const PD = [0.7, 0.8, 1.0];                         // relative proton density: WM, GM, CSF
-const state = { TR: 500, flip: 90, TE: 20, field: 1.5, useInversion: false, usePD: false, seq: 'GRE', TI: 250, baseSNR: 200 };
+const state = { TR: 500, flip: 90, TE: 20, field: 1.5, useInversion: false, usePD: true, fullT1: false, fullFlip: false, fullTE: false, seq: 'GRE', TI: 250, baseSNR: 200 };
 
 const t2name = () => state.seq === 'SE' ? 'T2' : 'T2*';
 // TE giving the largest WM/GM difference in the T2 (or T2*) decay: ln(T2g/T2w) / (1/T2w - 1/T2g)
@@ -412,12 +433,16 @@ function compute(s) {
   for (let i = w - 1; i >= 0; i--) tt.push(-t[i]);
   for (let i = 0; i < n; i++) tt.push(t[i]);
   for (let i = 0; i < w; i++) tt.push(t[i] + TR);
-  const Mext = M.map(m => [...m.slice(n - w), ...m, ...m.slice(0, w)]);
+  let Mext = M.map(m => [...m.slice(n - w), ...m, ...m.slice(0, w)]);
 
   const tE = Array.from({ length: 100 }, (_, i) => maxTE * i / 99);
   const M2 = T2.map(T => tE.map(x => Math.exp(-x / T)));
   const sigT2 = T2.map(T => Math.exp(-TE / T));
   const pd = s.usePD ? PD : [1, 1, 1];
+  // Chain graphs: fold proton density into the T1 recovery curves so they show signal (Mz x PD) rather than pure magnetisation.
+  // Controlled solely by the panel's own "Include full signal equation" tick together with the global Proton density box
+  const pdm = s.fullT1 && s.usePD ? PD : [1, 1, 1];
+  Mext = Mext.map((m, k) => m.map(v => v * pdm[k]));
   const sigT1T2 = sigT1.map((v, k) => v * sigT2[k] * pd[k]);
   const maxC = Math.max(...sigT1T2);
   return { T1, T2, pd, t, tt, Mext, tE, M2, sigT1, sigT2, sigT1T2, maxC, maxTE };
@@ -497,9 +522,15 @@ function axes(F, xd, yd, opts) {
   s += `<line class="axisline" x1="${m.l}" x2="${m.l}" y1="${m.t}" y2="${m.t + ph}"/>`;
   if (x0 > m.l) s += `<line class="axisline" x1="${x0}" x2="${x0}" y1="${m.t}" y2="${m.t + ph}" style="stroke-dasharray:3 3"/>`;
   s += `<line class="axisline" x1="${m.l}" x2="${m.l + pw}" y1="${m.t + ph}" y2="${m.t + ph}"/>`;
-  if (opts.xlabel) s += `<text class="axis-label" x="${m.l + pw / 2}" y="${F.H - 6}" text-anchor="middle">${opts.xlabel}</text>`;
-  if (opts.ylabel) s += `<text class="axis-label" transform="translate(13 ${m.t + ph / 2}) rotate(-90)" text-anchor="middle">${opts.ylabel}</text>`;
+  if (opts.xlabel) s += `<text class="axis-label" x="${m.l + pw / 2}" y="${F.H - 6}" text-anchor="middle">${svgSub(opts.xlabel)}</text>`;
+  if (opts.xlabelNote) s += `<text class="axis-label" x="${m.l + pw}" y="${F.H - 6}" text-anchor="end">${opts.xlabelNote}</text>`;
+  if (opts.ylabel) s += `<text class="axis-label" transform="translate(13 ${m.t + ph / 2}) rotate(-90)" text-anchor="middle">${svgSub(opts.ylabel)}</text>`;
   return { X, Y, s };
+}
+
+// convert "M_z"-style underscore markers into SVG subscripts (tspan with baseline shift)
+function svgSub(str) {
+  return str.replace(/_(\{[^}]+\}|\w)/g, (_, sub) => `<tspan class="sub" dy="0.25em" font-size="70%">${sub.replace(/[{}]/g, '')}</tspan>`);
 }
 
 // Line plot with hover read-out. o.y = tissue curves (left axis); o.y2 = optional extra curves on a right-hand 0..1 axis.
@@ -513,7 +544,7 @@ function linePlot(el, o) {
   const bw = hasBars ? clamp(F.pw * 0.2, 44, 64) : 0, x0 = F.m.l + bw;     // strip for the T1/T2-weighting bars
   const A = axes(F, o.xd, o.yd, compact
     ? { nx: 2, ny: 2, xticks: o.xticks, x0 }                 // no axis titles at this size; card title carries the unit
-    : { xlabel: F.W < 330 && o.xlabelS ? o.xlabelS : o.xlabel, ylabel: F.W < 330 && o.ylabelS ? o.ylabelS : o.ylabel, xticks: o.xticks, nx: F.W < 330 ? 3 : 6, x0 });
+    : { xlabel: F.W < 330 && o.xlabelS ? o.xlabelS : o.xlabel, xlabelNote: F.W < 330 ? '' : o.xlabelNote, ylabel: F.W < 330 && o.ylabelS ? o.ylabelS : o.ylabel, xticks: o.xticks, nx: F.W < 330 ? 3 : 6, x0 });
   const Y2 = v => m.t + ph - v / 1.05 * ph;
   const id = el.id + 'clip';
   let s = A.s + `<clipPath id="${id}"><rect x="${x0}" y="${m.t}" width="${m.l + pw - x0}" height="${ph}"/></clipPath><g clip-path="url(#${id})">`;
@@ -582,7 +613,8 @@ function linePlot(el, o) {
       all.map((ys, k) => `<div class="row"><span class="dot" style="background:${SERIES[k].css}"></span>${SERIES[k].label || SERIES[k].key}: ${ys[best].toFixed(3)}</div>`).join('');
     tip.style.display = 'block';
     const tw = tip.offsetWidth;
-    tip.style.left = (px + 14 + tw > F.W ? px - 14 - tw : px + 14) + 'px';
+    const right = px + 14 + tw > F.W;                       // no room to the right -> flip to the left of the cursor
+    tip.style.left = right ? Math.max(0, px - 14 - tw) + 'px' : Math.min(F.W - tw, px + 14) + 'px';
     tip.style.top = (m.t + 6) + 'px';
   });
   svg.addEventListener('pointerleave', () => { tip.style.display = 'none'; cross.style.display = 'none'; });
@@ -648,15 +680,16 @@ function drawSim(c) {
 let pending = false;
 function schedule() { if (!pending) { pending = true; requestAnimationFrame(() => { pending = false; render(); }); } }
 
-function render() {
+let render = function () {
   const s = state, c = compute(s);
   const embed = window.matchMedia('(min-width: 561px)').matches;      // wider layouts: bars live inside the signal plots; T2 decay plot hidden
   const num = x => String(x);
+  const pdv = s.usePD ? PD : [1, 1, 1];
 
   // titles
   document.getElementById('t1title').innerHTML =
-    `<b>T1-weighting</b><span class="par">: TR = ${num(s.TR)} ms, Flip angle = ${num(s.flip)}°` + (s.useInversion ? `, TI = ${num(s.TI)} ms` : '') + `</span>`;
-  document.getElementById('t2title').innerHTML = `<b>${t2name()}-weighting</b><span class="par">: TE = ${num(s.TE)} ms</span>`;
+    `<b>Longitudinal recovery</b>` + (s.useInversion ? `<span class="par">: TI = ${num(s.TI)} ms</span>` : '');
+  document.getElementById('t2title').innerHTML = `<b>Transverse decay</b><span class="par">: TE = ${num(s.TE)} ms</span>`;
 
   // T1 recovery
   const allM = c.Mext.flat();
@@ -667,47 +700,57 @@ function render() {
   linePlot(document.getElementById('t1plot'), {
     x: c.tt, y: c.Mext, xd: [c.tt[0], c.tt[c.tt.length - 1]], yd: yd1,
     xlabel: s.useInversion ? 'Time since last inversion pulse (ms)' : 'Time since last excitation pulse (ms)',
-    ylabel: 'Relative Mz', xlabelS: 'Time (ms)', ylabelS: 'Mz', vlines: vl,
+    ylabel: 'M_z', xlabelS: 'Time (ms)', ylabelS: 'M_z', vlines: vl,
     tipLabel: 't', aria: 'Longitudinal magnetisation recovery for WM, GM and CSF',
   });
 
   // T2 decay
-  if (!embed) linePlot(document.getElementById('t2plot'), {
-    x: c.tE, y: c.M2, xd: [0, c.maxTE], yd: [0, 1.05],
-    xlabel: 'Time since excitation pulse (ms)', ylabel: 'Relative Mxy', xlabelS: 'Time (ms)', ylabelS: 'Mxy',
-    vlines: [{ x: s.TE, dash: '7 5', w: 2 }], tipLabel: 'TE', aria: 'Transverse magnetisation decay for WM, GM and CSF',
-  });
+  if (!embed) {
+    const startD = c.sigT1.map((v, k) => (s.fullTE ? v * (s.usePD ? PD[k] : 1) : 1));
+    const M2D = c.M2.map((curve, k) => curve.map(v => v * startD[k]));
+    linePlot(document.getElementById('t2plot'), {
+      x: c.tE, y: M2D, xd: [0, c.maxTE], yd: [0, 1.05 * Math.max(1e-6, ...M2D.flat())],
+      xlabel: 'Time since excitation pulse (ms)', ylabel: '|M_{xy}|', xlabelS: 'Time (ms)', ylabelS: '|Mxy|',
+      vlines: [{ x: s.TE, dash: '7 5', w: 2 }], tipLabel: 'TE', aria: 'Transverse magnetisation decay for WM, GM and CSF',
+    });
+  }
 
-  // signal vs flip angle (T1 effect only, current TR) and signal vs TE (T2 effect only): same normalisation as the weighting bar charts
+  // signal vs flip angle (T1 effect only, current TR): full signal equation folds the proton density into curves and bars
   const fa = Array.from({ length: 91 }, (_, i) => i);
-  const sigF = [0, 1, 2].map(k => fa.map(a => t1Signal(c.T1, s.TR, s.TI, a, s.useInversion)[k]));
+  const pdF = s.fullFlip && s.usePD ? PD : [1, 1, 1];
+  const sigF = [0, 1, 2].map(k => fa.map(a => t1Signal(c.T1, s.TR, s.TI, a, s.useInversion)[k] * pdF[k]));
   // Ernst angle (spoiled gradient echo): cos(aE) = exp(-TR/T1). Not marked for the inversion-prepared case.
   const ernst = s.useInversion ? [] : c.T1.map((T, k) => {
     const aE = Math.acos(Math.exp(-s.TR / T)) * 180 / Math.PI;
-    return { k, x: aE, y: t1Signal(c.T1, s.TR, s.TI, aE, false)[k] };
+    return { k, x: aE, y: t1Signal(c.T1, s.TR, s.TI, aE, false)[k] * pdF[k] };
   });
   const conF = fa.map((_, i) => Math.abs(sigF[1][i] - sigF[0][i])), mF = Math.max(1e-9, ...conF);   // WM/GM contrast, normalised to its maximum
-  document.getElementById('t1ftitle').innerHTML = `<b>T1-weighting</b> vs flip angle (°)<span class="par">: TR = ${num(s.TR)} ms</span>`;
+  document.getElementById('t1ftitle').innerHTML = `<b>Signal</b> vs flip angle`;
   linePlot(document.getElementById('t1flip'), {
-    x: fa, bars: embed ? c.sigT1 : null, marks: ernst, y: sigF, y2: [conF.map(v => v / mF)], y2label: 'WM/GM contrast (norm.)', xd: [0, 90], yd: [0, 1.05 * Math.max(1e-6, ...sigF.flat())],
-    xticks: [0, 30, 60, 90], xlabel: s.useInversion ? 'Flip angle (°)' : 'Flip angle (°)    \u25CF = Ernst angle', xlabelS: 'Flip angle (°)', ylabel: 'T1-weighting', vlines: [{ x: s.flip, dash: '7 5', w: 2 }],
+    x: fa, bars: embed ? c.sigT1.map((v, k) => v * pdF[k]) : null, marks: ernst, y: sigF, y2: [conF.map(v => v / mF)], y2label: 'WM/GM contrast (norm.)', xd: [0, 90], yd: [0, 1.05 * Math.max(1e-6, ...sigF.flat())],
+    xticks: [0, 30, 60, 90], xlabel: 'Flip angle (°)', xlabelNote: s.useInversion ? '' : '\u25CF = Ernst angle', xlabelS: 'Flip angle (°)', ylabel: '|M_{xy}|', vlines: [{ x: s.flip, dash: '7 5', w: 2 }],
     tipLabel: 'Flip', unit: '°', aria: 'Signal versus flip angle for WM, GM and CSF',
   });
   const teMax = c.maxTE;
-  const sigE = c.M2, conE = c.tE.map((_, i) => Math.abs(c.M2[1][i] - c.M2[0][i])), mE = Math.max(1e-9, ...conE);
-  document.getElementById('t2etitle').innerHTML = `<b>${t2name()}-weighting</b> vs TE (ms)`;
-  document.getElementById('combtitle').innerHTML = `<b>Combined contrast</b> (normalised${s.usePD ? ', including proton density' : ''})`;
+  // chain for the T2 panels: when "Include full signal equation" is ticked, start each decay curve at the
+  // tissue's current T1-stage signal (Mz at the current TR/flip), scaled by PD if the global PD box is ticked
+  const start = c.sigT1.map((v, k) => (s.fullTE ? v * (s.usePD ? PD[k] : 1) : 1));
+  const sigE = c.M2.map((curve, k) => curve.map(v => v * start[k]));
+  const conE = c.tE.map((_, i) => Math.abs(sigE[1][i] - sigE[0][i])), mE = Math.max(1e-9, ...conE);
+  const barsE = c.sigT2.map((v, k) => v * start[k]);
+  document.getElementById('t2etitle').innerHTML = `<b>Transverse decay</b>`;
+  document.getElementById('combtitle').innerHTML = `<b>Combined signal</b> (normalised${s.usePD ? ', including proton density' : ''})`;
   document.getElementById('t2wtitle').innerHTML = `<b>${t2name()}-weighting</b>`;
   document.getElementById('preT2').textContent = `${t2name()}-weighted`;
   linePlot(document.getElementById('t2te'), {
-    x: c.tE, bars: embed ? c.sigT2 : null, y: sigE, y2: [conE.map(v => v / mE)], y2label: 'WM/GM contrast (norm.)', xd: [0, teMax], yd: [0, 1.05],
-    xlabel: 'TE (ms)', ylabel: `${t2name()}-weighting`, vlines: [{ x: s.TE, dash: '7 5', w: 2 }],
+    x: c.tE, bars: embed ? barsE : null, y: sigE, y2: [conE.map(v => v / mE)], y2label: 'WM/GM contrast (norm.)', xd: [0, teMax], yd: [0, 1.05 * Math.max(1e-6, ...sigE.flat())],
+    xlabel: 'TE (ms)', ylabel: '|M_{xy}|', vlines: [{ x: s.TE, dash: '7 5', w: 2 }],
     tipLabel: 'TE', aria: 'Signal versus echo time for WM, GM and CSF',
   });
 
   // bars
-  if (!embed) barPlot(document.getElementById('t1bars'), { ylabel: 'T1-weighting', values: c.sigT1, ymax: Math.max(1, 1.05 * Math.max(...c.sigT1)), yticks: [0, 0.5, 1], aria: 'T1-weighted signal per tissue' });
-  if (!embed) barPlot(document.getElementById('t2bars'), { ylabel: `${t2name()}-weighting`, values: c.sigT2, ymax: 1.1, yticks: [0, 0.5, 1], aria: 'T2 or T2* weighted signal per tissue' });
+  if (!embed) barPlot(document.getElementById('t1bars'), { ylabel: '|M_xy|', values: c.sigT1, ymax: Math.max(1, 1.05 * Math.max(...c.sigT1)), yticks: [0, 0.5, 1], aria: 'T1-weighted signal per tissue' });
+  if (!embed) barPlot(document.getElementById('t2bars'), { ylabel: '|M_xy|', values: c.sigT2, ymax: 1.1, yticks: [0, 0.5, 1], aria: 'T2 or T2* weighted signal per tissue' });
   barPlot(document.getElementById('combBars'), { values: c.sigT1T2.map(v => v / c.maxC), ymax: 1.1, yticks: [0, 0.5, 1], aria: 'Combined normalised signal per tissue' });
 
   // image + stats
@@ -723,8 +766,8 @@ function render() {
   document.getElementById('valtable').innerHTML =
     '<tr><th>Tissue</th><th>T1 (ms)</th><th>T2 (ms)</th><th>T2* (ms)</th><th>PD</th></tr>' +
     TISSUES.map((t, k) => `<tr><td>${t.name}</td><td>${c.T1[k]}</td><td>${RELAX[s.field === 3 ? 3 : 1.5].T2[k]}</td><td>${RELAX[s.field === 3 ? 3 : 1.5].T2s[k]}</td><td>${PD[k].toFixed(2)}</td></tr>`).join('');
-  window.simLast = c;
-}
+   window.simLast = c;
+};
 
 // ---------- controls ----------
 const $ = id => document.getElementById(id);
@@ -763,6 +806,11 @@ $('useInv').addEventListener('change', e => { state.useInversion = e.target.chec
 $('snr').addEventListener('input', e => { const v = +e.target.value; if (v > 0) { state.baseSNR = v; schedule(); } });
 $('seq').addEventListener('change', e => { state.seq = e.target.value; syncDerived(); schedule(); });
 $('usePD').addEventListener('change', e => { state.usePD = e.target.checked; schedule(); });
+  $('fullT1').addEventListener('change', e => { state.fullT1 = e.target.checked; schedule(); });
+  $('fullFlip').addEventListener('change', e => { state.fullFlip = e.target.checked; schedule(); });
+  // fullTE (TE panel) and fullTEd (phone T2 decay panel) are two views of the same state - keep them in sync
+  $('fullTE').addEventListener('change', e => { state.fullTE = e.target.checked; $('fullTEd').checked = e.target.checked; schedule(); });
+  $('fullTEd').addEventListener('change', e => { state.fullTE = e.target.checked; $('fullTE').checked = e.target.checked; schedule(); });
 const PRESETS = { T1: { TR: 500, flip: 90, TE: 15 }, T2: { TR: 4500, flip: 90, TE: null }, PD: { TR: 1000, flip: 5, TE: 2 } };   // small flip angle, short TE: T1 and T2* effects negligible, so only proton density (if ticked) gives contrast
 document.querySelectorAll('[data-preset]').forEach(b => b.addEventListener('click', () => {
   const P = PRESETS[b.dataset.preset];
@@ -771,12 +819,81 @@ document.querySelectorAll('[data-preset]').forEach(b => b.addEventListener('clic
 }));
 $('reroll').addEventListener('click', () => { reseed((Math.random() * 2 ** 31) | 0); schedule(); });
 
+// ---------- signal-equation info popups (hover on desktop, tap-toggle everywhere) ----------
+// M_0 is the equilibrium magnetisation (M_0 ∝ PD): the equations factor it out properly
+// instead of writing "PD · M_z", which would double-count. Grayed M_0 means M_0 = 1 (PD not included).
+const Mss = s => s.useInversion
+  ? `<i>M</i><sub>ss</sub>(<i>TI</i>)`
+  : `<span style="white-space:nowrap">(1 \u2212 e<sup>\u2212<i>TR</i>/<i>T1</i></sup>) / (1 \u2212 cos\u202F<i>\u03B1</i>\u202F\u00B7 e<sup>\u2212<i>TR</i>/<i>T1</i></sup>)</span>`;
+const EQ = {
+  // longitudinal recovery: PD sits inside the expression for M_z(t).
+  // Only PD grays (when the Proton density box is off) — the relaxation terms are always what's plotted.
+  t1: { terms: [
+    [s => `<i>M</i><sub><i>z</i></sub>(<i>t</i>) \u221D <span class="${s.fullT1 && s.usePD ? '' : 'off'}"><i>PD</i></span>\u00B7[1 \u2212 e<sup>\u2212<i>t</i>/<i>T1</i></sup> + ${Mss(s)}\u00B7cos\u202F<i>\u03B1</i>\u00B7e<sup>\u2212<i>t</i>/<i>T1</i></sup>]` + (s.useInversion ? ' \u00B7 sin\u202F<i>\u03B1</i>' : ''), () => true],
+  ], cap: s => s.useInversion ? 'longitudinal recovery after the inversion pulse' : 'longitudinal recovery after excitation' },
+  flip: { terms: [
+    ['<i>PD</i>', s => s.fullFlip && s.usePD],
+    [s => `sin\u202F<i>\u03B1</i>\u00B7${Mss(s)}`, () => true],
+  ], cap: 'signal vs flip angle at fixed TR' },
+  te: { terms: [
+    ['<i>PD</i>', s => s.fullTE && s.usePD],
+    [s => `sin\u202F<i>\u03B1</i>\u00B7${Mss(s)}`, s => s.fullTE],
+    [s => `e<sup>\u2212<i>TE</i>/<i>T2</i>${s.seq === 'SE' ? '' : '*'} </sup>`, () => true],
+  ], cap: () => 'decay as a function of TE' },
+};
+EQ.ted = EQ.te;                                   // phone T2 decay panel shares the TE equation
+const eqKey = { t1: 't1', flip: 'flip', te: 'te', ted: 'te' };
+document.querySelectorAll('.infoi').forEach(ic => {
+  const wrap = ic.parentElement;
+  const pop = wrap.querySelector('.infopop');
+  ic.addEventListener('click', e => { e.stopPropagation(); const opening = !wrap.classList.contains('open'); wrap.classList.toggle('open'); if (opening) { updateEqPop(ic.dataset.info); positionEqPop(pop); } });
+  ic.addEventListener('mouseenter', () => { updateEqPop(ic.dataset.info); positionEqPop(pop); });  ic.addEventListener('mouseleave', () => wrap.classList.remove('open'));
+  document.addEventListener('click', e => { if (!wrap.contains(e.target)) wrap.classList.remove('open'); });
+});
+// place the popup below the icon, opening to the right, clamped so it can never leave the viewport
+function positionEqPop(pop) {
+  if (!pop) return;
+  const hidden = getComputedStyle(pop).display === 'none';
+  if (hidden) pop.style.display = 'block';               // ensure measurable even if :hover CSS hasn't applied yet
+  const r = pop.parentElement.getBoundingClientRect();
+  pop.style.left = '-9999px'; pop.style.top = '-9999px'; // park off-screen, then measure real size
+  const w = pop.offsetWidth, h = pop.offsetHeight;
+  const vw = window.innerWidth, vh = window.innerHeight;
+  let x = r.right + 6;                                    // prefer opening to the RIGHT of the icon
+  if (x + w > vw - 4) x = Math.max(4, r.left - w - 6);    // no room -> flip left of the icon
+  if (x + w > vw - 4) x = Math.max(4, vw - w - 4);        // still too wide -> hard clamp to the right edge
+  let y = r.bottom + 6;
+  if (y + h > vh - 4) y = Math.max(4, r.top - h - 6);     // no room below -> open above the icon
+  pop.style.left = x + 'px';
+  pop.style.top = y + 'px';
+  if (hidden && !pop.parentElement.matches(':hover')) pop.style.display = '';   // restore CSS control if we forced it
+}
+function updateEqPop(key) {
+  const pop = document.querySelector(`[data-pop="${key}"]`), E = EQ[eqKey[key] || key];
+  if (!pop || !E || !E.terms) return;
+  const val = v => (typeof v === 'function' ? v(state) : v);
+  const isT1 = key === 't1' || eqKey[key] === 't1';
+  const lhs = isT1 ? '' : '<i>S</i> \u221D ';
+  const joiner = isT1 ? '' : ' \u00B7 ';
+  pop.innerHTML = '<span class="eq">' + lhs +
+    E.terms.map(([html, on]) => `<span class="${on(state) ? '' : 'off'}">${val(html)}</span>`).join(joiner) +
+    `</span> <span class="cap">${val(E.cap)}</span>`;
+}
+// keep the open popup (if any) current on every render
+const _renderEq = render;
+render = function () { _renderEq(); document.querySelectorAll('.infowrap.open .infoi').forEach(ic => { updateEqPop(ic.dataset.info); positionEqPop(ic.parentElement.querySelector('.infopop')); }); };
+
+// ---------- checkbox sync on load (a refresh always gives the default state above) ----------
+const syncChecks = () => { $('useInv').checked = state.useInversion; $('usePD').checked = state.usePD; $('fullT1').checked = state.fullT1; $('fullFlip').checked = state.fullFlip; $('fullTE').checked = state.fullTE; $('fullTEd').checked = state.fullTE; };
+$('tiBox').classList.toggle('on', state.useInversion);
+
 // redraw charts when their size changes
 const ro = new ResizeObserver(schedule);
 document.querySelectorAll('.chart').forEach(el => ro.observe(el));
 
 drawSeg();
 syncDerived();
+syncChecks();
 render();
 window.simState = state; window.simCompute = compute;
 </script>
