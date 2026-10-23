@@ -98,13 +98,6 @@
 
   footer.note { margin-top: 14px; color: var(--ink-3); font-size: .85em; line-height: 1.4; }
   footer.note a { color: var(--accent); text-decoration: underline; text-underline-offset: 2px; }
-  details.vals { position: relative; margin-left: auto; }
-  details.vals summary { cursor: pointer; color: var(--ink-2); }
-  details.vals .pop {
-    position: absolute; right: 0; top: calc(100% + 8px); z-index: 20;
-    background: var(--card); border: 1px solid var(--line); border-radius: 10px;
-    padding: 8px 14px 10px; box-shadow: 0 8px 24px rgba(0,0,0,.2);
-  }
   table { border-collapse: collapse; font-variant-numeric: tabular-nums; white-space: nowrap; }
   th, td { padding: 4px 14px 4px 0; text-align: left; border-bottom: 1px solid var(--line); }
   th { font-weight: 600; color: var(--ink-2); }
@@ -175,6 +168,20 @@
   .imgstats b { color: var(--ink); }
   .segwrap { max-width: 260px; margin: 12px auto 0; width: 100%; }
   .segwrap canvas { background: transparent; }
+  /* ---- phantom card tabs ---- */
+  .tabs { display: flex; gap: 6px; margin: 2px 0 8px; flex: none; }
+  .tab { padding: 3px 10px; font-size: .9em; background: var(--bg); }
+  .tab.on { border-color: var(--accent); color: var(--accent); font-weight: 650; }
+  .tabpanel { display: none; min-height: 0; flex-direction: column; flex: 1 1 0; }
+  .tabpanel.on { display: flex; }
+  .tabpanel .item { display: flex; align-items: center; gap: 8px; margin: 8px 0 4px; }
+  .tabpanel .item label { cursor: pointer; }
+  .valwrap { overflow-x: auto; margin-top: 6px; }
+  .valwrap table { width: 100%; }
+  .valwrap th, .valwrap td { padding: 4px 8px 4px 0; }
+  .valwrap input[type=number] { width: 5.2em; padding: 2px 4px; font-size: .92em; }
+  .valwrap input[type=number]:disabled { color: var(--ink-3); background: transparent; border-color: transparent; -moz-appearance: textfield; }
+  .valwrap .pdim { opacity: .4; }
 
   /* ---- narrow screens: stack ---- */
   @media (max-width: 900px) {
@@ -213,7 +220,7 @@
     .a-comb { order: 10; } .a-seg { order: 11; }
     .chart { height: 260px; }
     footer.note { order: 12; margin-top: 6px; }
-    details.vals .pop { right: auto; left: 0; }
+    .tab { padding: 3px 8px; font-size: .85em; }
   }
 
   /* ---- widescreen: one full-window dashboard, no page scroll ---- */
@@ -277,17 +284,9 @@
       <div class="opts">
         <div class="item fs">
           <div class="fsrow">
-            <label for="field"><b>Field strength</b></label>
-            <select id="field" aria-describedby="fsnote"><option value="1.5">1.5 T</option><option value="3">3 T</option></select>
-          </div>
-          <span class="fsnote" id="fsnote">Affects assumed T1, T2 and T2*</span>
-        </div>
-        <div class="item fs">
-          <div class="fsrow">
             <label for="seq"><b>Decay</b></label>
-            <select id="seq" aria-describedby="seqnote"><option value="GRE">T2* (gradient echo)</option><option value="SE">T2 (spin-echo-like)</option></select>
+            <select id="seq"><option value="GRE">T2* (gradient echo)</option><option value="SE">T2 (spin-echo-like)</option></select>
           </div>
-          <span class="fsnote" id="seqnote">Which relaxation time sets the TE decay</span>
         </div>
         <div class="item">
           <input type="checkbox" id="useInv"><label for="useInv"><b>Inversion pulse</b></label>
@@ -298,17 +297,10 @@
           <span class="numwrap"><input type="number" id="TIn" min="1" step="1"><span class="unit">ms</span></span>
         </div>
         <div class="item">
-          <input type="checkbox" id="usePD"><label for="usePD"><b>Proton density</b></label>
-        </div>
-        <div class="item">
           <label for="snr"><b>Base SNR</b></label>
           <input type="number" id="snr" min="1" max="2000" step="10" value="200">
         </div>
         <div class="item"><button id="reroll" type="button">Regenerate random noise</button></div>
-        <details class="vals">
-          <summary>Values table</summary>
-          <div class="pop"><table id="valtable"></table><div class="tcap">Assumed typical values, rounded.<br>T2*: Peters et al., Magn Reson Imaging 2007 (CSF assumed equal to T2).<br>PD is used only when Proton density is ticked.</div></div>
-        </details>
       </div>
     </section>
   </div>
@@ -344,13 +336,33 @@
         <div class="chart" id="t2bars"></div>
       </div>
       <div class="card a-seg">
-        <h2><b>Tissue segmentation</b></h2>
-        <div class="legend" aria-label="Tissue key">
-          <span><i class="sw" style="background:var(--wm)"></i>WM</span>
-          <span><i class="sw" style="background:var(--gm)"></i>GM</span>
-          <span><i class="sw" style="background:var(--csf)"></i>CSF</span>
+        <h2><b>Phantom</b></h2>
+        <div class="tabs" role="tablist" aria-label="Phantom panels">
+          <button type="button" class="tab on" data-tab="seg" aria-selected="true">Tissue segmentation</button>
+          <button type="button" class="tab" data-tab="props" aria-selected="false">Properties</button>
         </div>
-        <div class="segwrap"><canvas class="brain" id="segImg" width="160" height="192" aria-label="Tissue segmentation"></canvas></div>
+        <div class="tabpanel on" data-panel="seg">
+          <div class="legend" aria-label="Tissue key">
+            <span><i class="sw" style="background:var(--wm)"></i>WM</span>
+            <span><i class="sw" style="background:var(--gm)"></i>GM</span>
+            <span><i class="sw" style="background:var(--csf)"></i>CSF</span>
+          </div>
+          <div class="segwrap"><canvas class="brain" id="segImg" width="160" height="192" aria-label="Tissue segmentation"></canvas></div>
+        </div>
+        <div class="tabpanel" data-panel="props">
+          <div class="fsrow">
+            <label for="field"><b>Field strength</b></label>
+            <select id="field" aria-describedby="fsnote">
+              <option value="1.5">1.5 T</option><option value="3">3 T</option><option value="manual">Manual</option>
+            </select>
+          </div>
+          <span class="fsnote" id="fsnote">Sets the tissue T1, T2 and T2* — Manual allows editing them</span>
+          <div class="item">
+            <input type="checkbox" id="usePD"><label for="usePD"><b>Include proton density</b></label>
+          </div>
+          <div class="valwrap"><table id="valtable"></table></div>
+          <div class="tcap">Preset values from Peters et al., Magn Reson Imaging 2007 (CSF T2* assumed equal to T2), rounded. Manual allows editing all values.</div>
+        </div>
       </div>
     </div>
 
@@ -378,7 +390,7 @@ const SEG = "0000000000000000000000000000000000000000000000000000000000000000000
 const TISSUES = [
   { key: 'WM',  name: 'White matter', rgb: [66, 122, 223],  css: 'var(--wm)'  },
   { key: 'GM',  name: 'Grey matter',  rgb: [108, 158, 80],  css: 'var(--gm)'  },
-  { key: 'CSF', name: 'Cerebrospinal fluid',          rgb: [223, 76, 76],   css: 'var(--csf)' },
+  { key: 'CSF', name: 'CSF',          rgb: [223, 76, 76],   css: 'var(--csf)' },
 ];
 // extra (non-tissue) series for linePlot: GM-WM contrast, drawn dashed in the ink colour
 const SERIES = [...TISSUES, { key: 'WM/GM contrast', label: 'WM/GM contrast', name: 'WM/GM contrast (normalised)', css: 'var(--ink)', dash: '7 4' }];
@@ -389,18 +401,23 @@ const RELAX = {
 };
 
 const PD = [0.7, 0.8, 1.0];                         // relative proton density: WM, GM, CSF
-const state = { TR: 500, flip: 90, TE: 20, field: 1.5, useInversion: false, usePD: true, fullT1: false, fullFlip: false, fullTE: false, seq: 'GRE', TI: 250, baseSNR: 200 };
+const state = { TR: 500, flip: 90, TE: 20, field: '1.5', useInversion: false, usePD: true, fullT1: false, fullFlip: false, fullTE: false, seq: 'GRE', TI: 250, baseSNR: 200, customRelax: null };
+
+// relaxation values in use: preset table or user-edited copy (Manual mode)
+const getRelax = s => s.field === 'manual'
+  ? s.customRelax
+  : { T1: RELAX[s.field].T1.slice(), T2: RELAX[s.field].T2.slice(), T2s: RELAX[s.field].T2s.slice(), PD: PD.slice() };
 
 const t2name = () => state.seq === 'SE' ? 'T2' : 'T2*';
 // TE giving the largest WM/GM difference in the T2 (or T2*) decay: ln(T2g/T2w) / (1/T2w - 1/T2g)
 function peakTE() {
-  const R = RELAX[state.field === 3 ? 3 : 1.5], T = state.seq === 'SE' ? R.T2 : R.T2s;
+  const R = getRelax(state), T = state.seq === 'SE' ? R.T2 : R.T2s;
   return Math.round(Math.log(T[1] / T[0]) / (1 / T[0] - 1 / T[1]));
 }
 
 // ---------- physics (direct port of the MATLAB maths) ----------
 function compute(s) {
-  const R = RELAX[s.field === 3 ? 3 : 1.5], T1 = R.T1, T2 = s.seq === 'SE' ? R.T2 : R.T2s;   // gradient echo -> T2*, otherwise T2
+  const R = getRelax(s), T1 = R.T1, T2 = s.seq === 'SE' ? R.T2 : R.T2s;   // gradient echo -> T2*, otherwise T2
   const TR = s.TR, TE = s.TE, TI = s.TI;
   const f = s.flip * Math.PI / 180, cf = Math.cos(f), sf = Math.sin(f);
   const maxTE = Math.min(TR, 200);
@@ -440,10 +457,10 @@ function compute(s) {
   const tE = Array.from({ length: 100 }, (_, i) => maxTE * i / 99);
   const M2 = T2.map(T => tE.map(x => Math.exp(-x / T)));
   const sigT2 = T2.map(T => Math.exp(-TE / T));
-  const pd = s.usePD ? PD : [1, 1, 1];
+  const pd = s.usePD ? R.PD : [1, 1, 1];
   // Chain graphs: fold proton density into the T1 recovery curves so they show signal (Mz x PD) rather than pure magnetisation.
   // Controlled solely by the panel's own "Include full signal equation" tick together with the global Proton density box
-  const pdm = s.fullT1 && s.usePD ? PD : [1, 1, 1];
+  const pdm = s.fullT1 && s.usePD ? R.PD : [1, 1, 1];
   Mext = Mext.map((m, k) => m.map(v => v * pdm[k]));
   const sigT1T2 = sigT1.map((v, k) => v * sigT2[k] * pd[k]);
   const maxC = Math.max(...sigT1T2);
@@ -686,7 +703,8 @@ let render = function () {
   const s = state, c = compute(s);
   const embed = window.matchMedia('(min-width: 561px)').matches;      // wider layouts: bars live inside the signal plots; T2 decay plot hidden
   const num = x => String(x);
-  const pdv = s.usePD ? PD : [1, 1, 1];
+  const R = getRelax(s);       // relaxation + PD values in use (preset table or Manual edits)
+  const pdv = s.usePD ? R.PD : [1, 1, 1];
 
   // titles
   document.getElementById('t1title').innerHTML =
@@ -708,7 +726,7 @@ let render = function () {
 
   // T2 decay
   if (!embed) {
-    const startD = c.sigT1.map((v, k) => (s.fullTE ? v * (s.usePD ? PD[k] : 1) : 1));
+    const startD = c.sigT1.map((v, k) => (s.fullTE ? v * (s.usePD ? R.PD[k] : 1) : 1));
     const M2D = c.M2.map((curve, k) => curve.map(v => v * startD[k]));
     linePlot(document.getElementById('t2plot'), {
       x: c.tE, y: M2D, xd: [0, c.maxTE], yd: [0, 1.05 * Math.max(1e-6, ...M2D.flat())],
@@ -719,7 +737,7 @@ let render = function () {
 
   // signal vs flip angle (T1 effect only, current TR): full signal equation folds the proton density into curves and bars
   const fa = Array.from({ length: 91 }, (_, i) => i);
-  const pdF = s.fullFlip && s.usePD ? PD : [1, 1, 1];
+  const pdF = s.fullFlip && s.usePD ? R.PD : [1, 1, 1];
   const sigF = [0, 1, 2].map(k => fa.map(a => t1Signal(c.T1, s.TR, s.TI, a, s.useInversion)[k] * pdF[k]));
   // Ernst angle (spoiled gradient echo): cos(aE) = exp(-TR/T1). Not marked for the inversion-prepared case.
   const ernst = s.useInversion ? [] : c.T1.map((T, k) => {
@@ -736,7 +754,7 @@ let render = function () {
   const teMax = c.maxTE;
   // chain for the T2 panels: when "Include full signal equation" is ticked, start each decay curve at the
   // tissue's current T1-stage signal (Mz at the current TR/flip), scaled by PD if the global PD box is ticked
-  const start = c.sigT1.map((v, k) => (s.fullTE ? v * (s.usePD ? PD[k] : 1) : 1));
+  const start = c.sigT1.map((v, k) => (s.fullTE ? v * (s.usePD ? R.PD[k] : 1) : 1));
   const sigE = c.M2.map((curve, k) => curve.map(v => v * start[k]));
   const conE = c.tE.map((_, i) => Math.abs(sigE[1][i] - sigE[0][i])), mE = Math.max(1e-9, ...conE);
   const barsE = c.sigT2.map((v, k) => v * start[k]);
@@ -764,10 +782,23 @@ let render = function () {
     `<div><b>Total acq. time:</b> ${mins} mins <span style="color:var(--ink-3)">(Assuming 192xTR)</span></div>` +
     `<div><b>WM SNR:</b> ${fmt3(c.sigT1T2[0] * s.baseSNR)} &nbsp; <b>GM/WM CNR:</b> ${fmt3(Math.abs((c.sigT1T2[1] - c.sigT1T2[0]) * s.baseSNR))}</div>`;
 
-  // table
+  // phantom values table: editable in Manual mode; PD column shows what is actually used
+  const manual = s.field === 'manual';
+  const pdUsed = s.usePD ? R.PD : [1, 1, 1];
+  const cell = (val, prop, k, step, min, max) => manual
+    ? `<input type="number" data-prop="${prop}" data-tissue="${k}" step="${step}" min="${min}" max="${max}" value="${val}">`
+    : `${val}`;
   document.getElementById('valtable').innerHTML =
-    '<tr><th>Tissue</th><th>T1 (ms)</th><th>T2 (ms)</th><th>T2* (ms)</th><th>PD</th></tr>' +
-    TISSUES.map((t, k) => `<tr><td>${t.name}</td><td>${c.T1[k]}</td><td>${RELAX[s.field === 3 ? 3 : 1.5].T2[k]}</td><td>${RELAX[s.field === 3 ? 3 : 1.5].T2s[k]}</td><td>${PD[k].toFixed(2)}</td></tr>`).join('');
+    `<tr><th>Tissue</th><th>T1 (ms)</th><th>T2 (ms)</th><th>T2* (ms)</th><th${s.usePD ? '' : ' class="pdim"'}>PD</th></tr>` +
+    TISSUES.map((t, k) =>
+      `<tr><td>${t.name}</td>` +
+      `<td>${cell(R.T1[k], 'T1', k, 10, 1, 10000)}</td>` +
+      `<td>${cell(R.T2[k], 'T2', k, 5, 0.1, 5000)}</td>` +
+      `<td>${cell(R.T2s[k], 'T2s', k, 5, 0.1, 5000)}</td>` +
+      `<td class="${s.usePD ? '' : 'pdim'}">${manual
+        ? `<input type="number" data-prop="PD" data-tissue="${k}" step="0.05" min="0" max="1" value="${s.usePD ? R.PD[k].toFixed(2) : '1.00'}" ${s.usePD ? '' : 'disabled'}>`
+        : pdUsed[k].toFixed(2)}</td></tr>`
+    ).join('');
    window.simLast = c;
 };
 
@@ -788,6 +819,7 @@ function syncDerived() {
   $('TE').value = state.TE;             $('TEn').value = state.TE;
   $('TI').value = state.TI;             $('TIn').value = state.TI;
   $('useInv').checked = state.useInversion; $('tiBox').classList.toggle('on', state.useInversion); $('usePD').checked = state.usePD; $('seq').value = state.seq;
+  $('field').value = state.field;
 }
 function setVal(key, v, lo, hi) {
   if (!isFinite(v)) return;
@@ -821,11 +853,41 @@ $('TIn').addEventListener('input', e => setRaw('TI', +e.target.value));
   $(id).addEventListener('blur', () => commitField(key));
   $(id).addEventListener('keydown', e => { if (e.key === 'Enter') e.target.blur(); });
 });
-$('field').addEventListener('change', e => { state.field = +e.target.value; schedule(); });
+// ---------- phantom panel: tabs, field strength with Manual, editable values ----------
+document.querySelectorAll('.tab').forEach(b => b.addEventListener('click', () => {
+  document.querySelectorAll('.tab').forEach(t => { t.classList.toggle('on', t === b); t.setAttribute('aria-selected', t === b); });
+  document.querySelectorAll('.tabpanel').forEach(p => p.classList.toggle('on', p.dataset.panel === b.dataset.tab));
+}));
+// seed the user-editable copy of the tissue values when Manual is first selected (kept on return visits)
+function seedCustom() {
+  if (!state.customRelax) state.customRelax = { T1: RELAX[1.5].T1.slice(), T2: RELAX[1.5].T2.slice(), T2s: RELAX[1.5].T2s.slice(), PD: PD.slice() };
+}
+$('field').addEventListener('change', e => {
+  state.field = e.target.value;
+  if (state.field === 'manual') seedCustom();
+  schedule();
+});
+$('usePD').addEventListener('change', e => { state.usePD = e.target.checked; schedule(); });
+// editing a value auto-switches to Manual (seeding from the currently selected preset field)
+document.getElementById('valtable').addEventListener('change', e => {
+  const inp = e.target;
+  if (!inp.matches('input[type=number]') || inp.disabled) return;
+  const prop = inp.dataset.prop, k = +inp.dataset.tissue;
+  if (state.field !== 'manual') { seedCustomFrom(state.field); state.field = 'manual'; }
+  const bounds = prop === 'PD' ? [0, 1] : prop === 'T1' ? [1, 10000] : [0.1, 5000];
+  let v = parseFloat(inp.value);
+  if (!isFinite(v)) v = state.customRelax[prop][k];
+  state.customRelax[prop][k] = clamp(v, bounds[0], bounds[1]);
+  schedule();
+});
+// seed from a specific preset table (used by auto-switch on edit)
+function seedCustomFrom(field) {
+  state.customRelax = { T1: RELAX[field].T1.slice(), T2: RELAX[field].T2.slice(), T2s: RELAX[field].T2s.slice(), PD: PD.slice() };
+}
+function seedCustom() { if (!state.customRelax) seedCustomFrom('1.5'); }
 $('useInv').addEventListener('change', e => { state.useInversion = e.target.checked; $('tiBox').classList.toggle('on', e.target.checked); schedule(); });
 $('snr').addEventListener('input', e => { const v = +e.target.value; if (v > 0) { state.baseSNR = v; schedule(); } });
 $('seq').addEventListener('change', e => { state.seq = e.target.value; syncDerived(); schedule(); });
-$('usePD').addEventListener('change', e => { state.usePD = e.target.checked; schedule(); });
   $('fullT1').addEventListener('change', e => { state.fullT1 = e.target.checked; schedule(); });
   $('fullFlip').addEventListener('change', e => { state.fullFlip = e.target.checked; schedule(); });
   // fullTE (TE panel) and fullTEd (phone T2 decay panel) are two views of the same state - keep them in sync
