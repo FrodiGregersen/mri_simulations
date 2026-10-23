@@ -794,15 +794,33 @@ function setVal(key, v, lo, hi) {
   state[key] = clamp(Math.round(v), lo, hi);
   syncDerived(); schedule();
 }
+// update a value from a number field while typing: no clamping, no rewriting the field
+// (clamping happens on blur via commitField), so multi-digit values like 400 can be typed
+function setRaw(key, v) {
+  if (!isFinite(v) || v <= 0) return;
+  state[key] = Math.round(v);
+  schedule();
+}
+// clamp a typed value to its allowed range when the field is left
+const FIELD_BOUNDS = { TR: [5, 8000], flip: [1, 90], TE: [1, 200], TI: [1, 7999] };
+function commitField(key) {
+  state[key] = clamp(state[key], FIELD_BOUNDS[key][0], FIELD_BOUNDS[key][1]);
+  syncDerived(); schedule();
+}
 $('TR').addEventListener('input', e => setVal('TR', trFromPos(+e.target.value), 5, 8000));
-$('TRn').addEventListener('input', e => { if (e.target.value !== '') setVal('TR', +e.target.value, 5, 8000); });
+$('TRn').addEventListener('input', e => setRaw('TR', +e.target.value));
 $('flip').addEventListener('input', e => setVal('flip', +e.target.value, 1, 90));
-$('flipn').addEventListener('input', e => { if (e.target.value !== '') setVal('flip', +e.target.value, 1, 90); });
+$('flipn').addEventListener('input', e => setRaw('flip', +e.target.value));
 $('TE').addEventListener('input', e => setVal('TE', +e.target.value, 1, 200));
-$('TEn').addEventListener('input', e => { if (e.target.value !== '') setVal('TE', +e.target.value, 1, 200); });
+$('TEn').addEventListener('input', e => setRaw('TE', +e.target.value));
 $('TI').addEventListener('input', e => setVal('TI', +e.target.value, 1, 7999));
-$('TIn').addEventListener('input', e => { if (e.target.value !== '') setVal('TI', +e.target.value, 1, 7999); });
-['TRn', 'flipn', 'TEn', 'TIn'].forEach(id => $(id).addEventListener('blur', syncDerived));
+$('TIn').addEventListener('input', e => setRaw('TI', +e.target.value));
+// clamping to the allowed ranges happens when the field is left (blur) or Enter is pressed
+['TRn', 'flipn', 'TEn', 'TIn'].forEach(id => {
+  const key = id === 'TRn' ? 'TR' : id === 'flipn' ? 'flip' : id === 'TEn' ? 'TE' : 'TI';
+  $(id).addEventListener('blur', () => commitField(key));
+  $(id).addEventListener('keydown', e => { if (e.key === 'Enter') e.target.blur(); });
+});
 $('field').addEventListener('change', e => { state.field = +e.target.value; schedule(); });
 $('useInv').addEventListener('change', e => { state.useInversion = e.target.checked; $('tiBox').classList.toggle('on', e.target.checked); schedule(); });
 $('snr').addEventListener('input', e => { const v = +e.target.value; if (v > 0) { state.baseSNR = v; schedule(); } });
