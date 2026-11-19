@@ -1,50 +1,21 @@
-# teaching-aids
+# MRI Simulations
 
-This is a fork of [https://dangallichan.github.io/teaching-aids/simContrast.html](
-https://dangallichan.github.io/teaching-aids/simContrast.html) with small modifications.
+This is a fork of [Daniel Gallichan's teaching-aids repository](https://github.com/dangallichan/teaching-aids),
+in which the [MRI contrast simulator](https://dangallichan.github.io/teaching-aids/simContrast.html)
+has been modified and extended (original MATLAB implementation built with help from AI).
 
+**What has changed in the MRI contrast simulator:**
 
+- **Full signal equations per figure:** each figure (longitudinal recovery, signal vs flip angle, transverse decay) has an
+  "Include full signal equation" tick. When enabled, the T1 panels fold in proton density, and the T2 decay curves start
+  from the current T1-stage signal instead of from full magnetisation.
+- **Phantom panel:** the tissue segmentation now lives in a "Phantom" card with two tabs. The *Properties* tab holds the
+  field strength (1.5 T / 3 T presets or a Manual mode), the proton density toggle, and the tissue values table —
+  T1, T2, T2* and PD for WM, GM and CSF are editable in Manual mode.
 
-
-https://github.com/user-attachments/assets/cd201d9a-6540-4d44-bbe2-cd3078e4dd03
-
-
-
-
-[https://dangallichan.github.io/teaching-aids/phaseEncoding.html](
-https://dangallichan.github.io/teaching-aids/phaseEncoding.html)
-
-
-https://github.com/user-attachments/assets/7aa7c76c-a6f6-4d79-98d2-5e59f57cbbfb
-
-
-
-[https://dangallichan.github.io/teaching-aids/fft_visualisation/index.html](https://dangallichan.github.io/teaching-aids/fft_visualisation/index.html)
-
-
-
-https://github.com/user-attachments/assets/3b601d54-97b7-40bc-a0cd-1e0cb17aa41e
-
-
-[https://dangallichan.github.io/teaching-aids/magnetisation_signal.html](https://dangallichan.github.io/teaching-aids/magnetisation_signal.html)
-
-
-https://github.com/user-attachments/assets/cae5059e-07e9-4048-bd94-de3d9f86522c
-
-
-[https://dangallichan.github.io/teaching-aids/magnetisation_signal_v2.html](https://dangallichan.github.io/teaching-aids/magnetisation_signal_v2.html)
-
-
-
-https://github.com/user-attachments/assets/6a5e71e9-370d-4910-a209-5ddfa6a0cf8e
-
-
+![MRI contrast simulator](MRIContrastSimulator.png)
 
 ---
-### Some slightly more random tests of what is possible
 
-[https://dangallichan.github.io/teaching-aids/parameterisedDog.html](https://dangallichan.github.io/teaching-aids/parameterisedDog.html)
-
-[https://dangallichan.github.io/teaching-aids/snakeWordGame.html](https://dangallichan.github.io/teaching-aids/snakeWordGame.html)
-
-
+The other teaching tools in this repository (phase encoding, FFT visualisation, magnetisation signal, etc.) are unmodified
+from the original — see the [upstream teaching-aids](https://github.com/dangallichan/teaching-aids) for details.
