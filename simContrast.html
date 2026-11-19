@@ -169,6 +169,32 @@
   .imgstats { margin: 0 0 8px; text-align: center; flex: none; }
   .imgstats div { margin: 1px 0; }
   .imgstats b { color: var(--ink); }
+  /* image row: canvas + dual-handle window (min/max) slider */
+  .imgrow { display: flex; gap: 8px; flex: 1 1 0; min-height: 0; align-items: stretch; }
+  .imgrow .canvaswrap { flex: 1 1 0; min-height: 0; }
+  .winwrap { position: relative; width: 26px; flex: none; display: inline-block; }
+  /* the blue bar is a separate element so both slider thumbs can sit above it */
+  .winwrap::before {
+    content: ''; position: absolute; top: 3px; bottom: 3px; left: 50%; width: 4px;
+    transform: translateX(-50%); background: var(--accent); opacity: .5; border-radius: 2px; pointer-events: none;
+  }
+  .winwrap input[type=range] {
+    position: absolute; top: 0; left: 0; height: 100%; width: 26px; margin: 0; z-index: 2;
+    writing-mode: vertical-lr; direction: rtl; pointer-events: none; cursor: ns-resize;
+    -webkit-appearance: none; appearance: none; background: transparent;
+  }
+  .winwrap input[type=range]::-webkit-slider-runnable-track { width: 26px; height: 100%; background: transparent; border: none; }
+  .winwrap input[type=range]::-webkit-slider-thumb {
+    -webkit-appearance: none; pointer-events: auto; cursor: ns-resize; margin: 0;
+    width: 14px; height: 14px; border-radius: 50%; background: var(--accent);
+    border: 2px solid var(--card); box-shadow: 0 1px 3px rgba(0,0,0,.35);
+  }
+  .winwrap input[type=range]::-moz-range-track { width: 26px; background: transparent; border: none; }
+  .winwrap input[type=range]::-moz-range-thumb {
+    pointer-events: auto; cursor: ns-resize;
+    width: 14px; height: 14px; border-radius: 50%; background: var(--accent);
+    border: 2px solid var(--card); box-shadow: 0 1px 3px rgba(0,0,0,.35);
+  }
   .segwrap { max-width: 260px; margin: 12px auto 0; width: 100%; }
   .segwrap canvas { background: transparent; }
   /* ---- phantom card tabs ---- */
@@ -372,7 +398,13 @@
     <div class="right">
       <div class="card">
         <div class="imgstats" id="imgstats"></div>
-        <div class="canvaswrap"><canvas class="brain" id="simImg" width="160" height="192" aria-label="Simulated brain image"></canvas></div>
+        <div class="imgrow">
+          <div class="canvaswrap"><canvas class="brain" id="simImg" width="160" height="192" aria-label="Simulated brain image"></canvas></div>
+          <span class="winwrap" title="Image display window: drag the dots to set min and max">
+            <input type="range" id="winLo" min="0" max="1" step="0.01" value="0" aria-label="Display window minimum">
+            <input type="range" id="winHi" min="0" max="1" step="0.01" value="1" aria-label="Display window maximum">
+          </span>
+        </div>
       </div>
     </div>
   </div>
@@ -406,7 +438,7 @@ const RELAX = {
 };
 
 const PD = [0.7, 0.8, 1.0];                         // relative proton density: WM, GM, CSF
-const state = { TR: 500, flip: 90, TE: 20, field: '1.5', useInversion: false, usePD: true, fullT1: false, fullFlip: false, fullTE: false, seq: 'GRE', TI: 250, baseSNR: 200, customRelax: null };
+const state = { TR: 500, flip: 90, TE: 20, field: '1.5', useInversion: false, usePD: true, fullT1: true, fullFlip: true, fullTE: true, seq: 'GRE', TI: 250, baseSNR: 200, customRelax: null, winLo: 0, winHi: 1 };
 
 // relaxation values in use: preset table or user-edited copy (Manual mode)
 const getRelax = s => s.field === 'manual'
@@ -693,12 +725,21 @@ function drawSim(c) {
     vals[i] = v; if (v < lo) lo = v; if (v > hi) hi = v;
   }
   const im = ctx.createImageData(SEG_COLS, SEG_ROWS), span = hi - lo || 1;   // imagesc auto-scaling
+  // whenever the underlying data range changes (parameters, noise), return to the full auto window
+  if (lo !== drawSim.lastLo || hi !== drawSim.lastHi) {
+    drawSim.lastLo = lo; drawSim.lastHi = hi;
+    state.winLo = 0; state.winHi = 1;
+    $('winLo').value = 0; $('winHi').value = 1;
+  }
+  // dual-handle window: winLo/winHi are fractions of the auto range (0 = image min, 1 = image max)
+  const loW = lo + span * state.winLo, hiW = lo + span * state.winHi, spanW = hiW - loW || 1e-9;
   for (let i = 0; i < n; i++) {
-    const g = Math.round(255 * (vals[i] - lo) / span);
+    const g = Math.round(255 * clamp((vals[i] - loW) / spanW, 0, 1));
     im.data.set([g, g, g, 255], i * 4);
   }
   ctx.putImageData(im, 0, 0);
 }
+drawSim.lastLo = null; drawSim.lastHi = null;
 
 // ---------- main render ----------
 let pending = false;
@@ -905,11 +946,22 @@ document.querySelectorAll('[data-preset]').forEach(b => b.addEventListener('clic
   syncDerived(); schedule();
 }));
 $('reroll').addEventListener('click', () => { reseed((Math.random() * 2 ** 31) | 0); schedule(); });
+// dual-handle image window: two fractions of the auto range, kept from crossing
+const WIN_GAP = 0.02;
+$('winLo').addEventListener('input', e => {
+  state.winLo = clamp(+e.target.value, 0, state.winHi - WIN_GAP);
+  e.target.value = state.winLo;
+  schedule();
+});
+$('winHi').addEventListener('input', e => {
+  state.winHi = clamp(+e.target.value, state.winLo + WIN_GAP, 1);
+  e.target.value = state.winHi;
+  schedule();
+});
 
 // ---------- signal-equation info popups (hover on desktop, tap-toggle everywhere) ----------
 // Set to false to hide the circled-i icons and popups; all machinery below stays intact.
-const SHOW_EQUATION_POPUPS = false;
-document.body.classList.toggle('no-eq-popups', !SHOW_EQUATION_POPUPS);
+const SHOW_EQUATION_POPUPS = false; document.body.classList.toggle('no-eq-popups', !SHOW_EQUATION_POPUPS);
 // Set to false to hide the T1/T2*/PD preset buttons; the PRESETS table and click handlers stay intact.
 const SHOW_PRESETS = false; document.body.classList.toggle('no-presets', !SHOW_PRESETS);
 // M_0 is the equilibrium magnetisation (M_0 ∝ PD): the equations factor it out properly
@@ -1005,6 +1057,7 @@ document.querySelectorAll('.chart').forEach(el => ro.observe(el));
 drawSeg();
 syncDerived();
 syncChecks();
+$('snr').value = state.baseSNR;   // override browser form restoration so the field matches the default state
 render();
 window.simState = state; window.simCompute = compute;
 </script>
