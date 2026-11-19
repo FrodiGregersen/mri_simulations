@@ -81,6 +81,7 @@
   button:hover { border-color: var(--accent); }
   .presets { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 8px; margin: 2px 0 0; }
   body.no-presets .presets { display: none; }   /* preset buttons hidden (SHOW_PRESETS) */
+  body.no-winbar .winwrap { display: none; }     /* min/max window bar hidden (SHOW_WINDOW_BAR) */
   .presets .plabel { color: var(--ink-2); font-weight: 650; margin-right: 2px; }
   .presets button { padding: 3px 9px; font-size: .9em; }
   .opts { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 8px 28px; align-items: center;
@@ -970,6 +971,8 @@ $('winHi').addEventListener('input', e => {
 const SHOW_EQUATION_POPUPS = false; document.body.classList.toggle('no-eq-popups', !SHOW_EQUATION_POPUPS);
 // Set to false to hide the T1/T2*/PD preset buttons; the PRESETS table and click handlers stay intact.
 const SHOW_PRESETS = false; document.body.classList.toggle('no-presets', !SHOW_PRESETS);
+// Set to false to hide the dual-handle min/max window bar beside the simulated image; the windowing machinery stays intact.
+const SHOW_WINDOW_BAR = false; document.body.classList.toggle('no-winbar', !SHOW_WINDOW_BAR);
 // M_0 is the equilibrium magnetisation (M_0 ∝ PD): the equations factor it out properly
 // instead of writing "PD · M_z", which would double-count. Grayed M_0 means M_0 = 1 (PD not included).
 // Steady-state magnetisation after the (TR-1/2 alpha) segment, fully expanded for both modes
