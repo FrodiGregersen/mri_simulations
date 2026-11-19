@@ -165,17 +165,17 @@
   .tip .row { display: flex; align-items: center; gap: 6px; }
   .tip .dot { width: 9px; height: 9px; border-radius: 50%; }
 
-  canvas.brain { display: block; width: 100%; height: auto; background: var(--img-bg); border-radius: 6px; }
+  canvas.brain { display: block; width: 100%; height: 100%; object-fit: contain; background: var(--img-bg); border-radius: 6px; }
   .imgstats { margin: 0 0 8px; text-align: center; flex: none; }
   .imgstats div { margin: 1px 0; }
   .imgstats b { color: var(--ink); }
   /* image row: canvas + dual-handle window (min/max) slider */
   .imgrow { display: flex; gap: 8px; flex: 1 1 0; min-height: 0; align-items: stretch; }
   .imgrow .canvaswrap { flex: 1 1 0; min-height: 0; }
-  .winwrap { position: relative; width: 26px; flex: none; display: inline-block; }
+  .winwrap { position: relative; width: 26px; height: 100%; flex: none; display: inline-block; }
   /* the blue bar is a separate element so both slider thumbs can sit above it */
   .winwrap::before {
-    content: ''; position: absolute; top: 3px; bottom: 3px; left: 50%; width: 4px;
+    content: ''; position: absolute; top: 9px; bottom: 9px; left: 50%; width: 4px;
     transform: translateX(-50%); background: var(--accent); opacity: .5; border-radius: 2px; pointer-events: none;
   }
   .winwrap input[type=range] {
@@ -185,7 +185,7 @@
   }
   .winwrap input[type=range]::-webkit-slider-runnable-track { width: 26px; height: 100%; background: transparent; border: none; }
   .winwrap input[type=range]::-webkit-slider-thumb {
-    -webkit-appearance: none; pointer-events: auto; cursor: ns-resize; margin: 0;
+    -webkit-appearance: none; pointer-events: auto; cursor: ns-resize; margin: 0 0 0 6px;
     width: 14px; height: 14px; border-radius: 50%; background: var(--accent);
     border: 2px solid var(--card); box-shadow: 0 1px 3px rgba(0,0,0,.35);
   }
@@ -201,7 +201,7 @@
   .tabs { display: flex; gap: 6px; margin: 2px 0 8px; flex: none; }
   .tab { padding: 3px 10px; font-size: .9em; background: var(--bg); }
   .tab.on { border-color: var(--accent); color: var(--accent); font-weight: 650; }
-  .tabpanel { display: none; min-height: 0; flex-direction: column; flex: 1 1 0; }
+  .tabpanel { display: none; min-height: 0; flex-direction: column; flex: 1 1 auto; }
   .tabpanel.on { display: flex; }
   .tabpanel .item { display: flex; align-items: center; gap: 8px; margin: 8px 0 4px; }
   .tabpanel .item label { cursor: pointer; }
@@ -216,6 +216,11 @@
   @media (max-width: 900px) {
     .grid { grid-template-columns: minmax(0, 1fr); }
     .controls { grid-template-columns: minmax(0, 1fr); }
+  }
+  /* ---- tablet band: card height is auto here, so give the image row an explicit height
+         (otherwise the flex-basis-0 row collapses in Firefox and the window slider vanishes) ---- */
+  @media (min-width: 561px) and (max-width: 1099px) {
+    .imgrow { height: max(240px, 40vh); flex: none; }
   }
   /* ---- phone: first screen = title, 3 sliders, image, T1/T2 weighting bars; everything else below ---- */
   @media (max-width: 560px) {
@@ -240,6 +245,7 @@
     .a-t1 h2::after, .a-t2 h2::after { content: ' (ms)'; color: var(--ink-3); }
     .a-t1 .chart, .a-t2 .chart, .a-t1w .chart, .a-t2w .chart, .a-t1f .chart, .a-t2e .chart { height: auto; flex: 1 1 0; min-height: 0; }
     .imgstats { font-size: .85em; margin-bottom: 4px; line-height: 1.35; }
+    .imgrow { min-height: 200px; }   /* guard: keeps the window slider usable however the card sizes */
     .canvaswrap { flex: 1 1 0; min-height: 0; }
     .canvaswrap canvas { height: 100%; object-fit: contain; }
     /* below the first screen */

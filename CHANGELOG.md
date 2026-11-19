@@ -12,6 +12,7 @@ All notable changes to this project will be documented in this file.
 
 ### Fixed
 - Base SNR field no longer shows a stale value after a page reload (browser form restoration overridden at startup).
+- Image and window slider layout across browsers and widths: the simulated image now letterboxes within its card (object-fit: contain) instead of overflowing it in narrow layouts, and the min/max bar scales with the canvas box. The window slider no longer collapses in Firefox at narrow widths (explicit image-row height in the tablet band); the slider dots are centred on the bar in Chrome/Edge (WebKit thumb margin fix). The phantom card sizes to its content so the segmentation image stays inside it.
 
 ## [Phantom panel] (committed)
 
