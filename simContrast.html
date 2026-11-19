@@ -127,6 +127,8 @@
   .chainlbl { color: var(--ink-2); font-size: .9em; display: inline-flex; align-items: center; gap: 4px; cursor: pointer; user-select: none; white-space: nowrap; }
   /* circled-i signal-equation info icon + hover/tap popup */
   .infowrap { position: relative; display: inline-flex; flex: none; margin-left: auto; }
+  body.no-eq-popups .infowrap { display: none; }      /* equation popups disabled (SHOW_EQUATION_POPUPS) */
+  body.no-eq-popups .chainlbl { margin-left: auto; }    /* keep the ticks right-aligned without the icon */
   .infoi { width: 15px; height: 15px; border: 1.5px solid var(--ink-3); border-radius: 50%; display: inline-flex; align-items: center; justify-content: center;
            font: italic 700 .78em Georgia, 'Times New Roman', serif; color: var(--ink-2); cursor: help; user-select: none; }
   .infoi:hover { border-color: var(--accent); color: var(--accent); }
@@ -376,8 +378,10 @@
 
   <footer class="note">
     Uses lots of simplifying assumptions (especially instantaneous readout!) but should convey main concepts of contrast generation.
-    Built with help from AI from original MATLAB implementation by
+    This is a modified version of the MRI contrast simulator by
     <a href="https://profiles.cardiff.ac.uk/staff/gallichand" target="_blank" rel="noopener">Daniel Gallichan</a>
+    (<a href="https://github.com/dangallichan/teaching-aids" target="_blank" rel="noopener">GitHub</a>)
+    — original MATLAB implementation built with help from AI.
   </footer>
 </div>
 
@@ -902,6 +906,9 @@ document.querySelectorAll('[data-preset]').forEach(b => b.addEventListener('clic
 $('reroll').addEventListener('click', () => { reseed((Math.random() * 2 ** 31) | 0); schedule(); });
 
 // ---------- signal-equation info popups (hover on desktop, tap-toggle everywhere) ----------
+// Set to false to hide the circled-i icons and popups; all machinery below stays intact.
+const SHOW_EQUATION_POPUPS = false;
+document.body.classList.toggle('no-eq-popups', !SHOW_EQUATION_POPUPS);
 // M_0 is the equilibrium magnetisation (M_0 ∝ PD): the equations factor it out properly
 // instead of writing "PD · M_z", which would double-count. Grayed M_0 means M_0 = 1 (PD not included).
 // Steady-state magnetisation after the (TR-1/2 alpha) segment, fully expanded for both modes

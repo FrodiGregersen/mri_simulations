@@ -18,6 +18,10 @@ All notable changes to this project will be documented in this file.
 ### Fixed
 - Proton density edits previously had no effect (hardcoded PD array used for scaling).
 
+### Changed
+- Footer updated: states this is a modified version of Daniel Gallichan's MRI contrast simulator, with links to his Cardiff profile and GitHub repository (teaching-aids); original MATLAB implementation built with help from AI.
+- Equation info popups (circled-i icons) hidden behind a feature flag (`SHOW_EQUATION_POPUPS = false`); the "Include full signal equation" ticks remain, and all popup machinery stays in the code for re-enabling.
+
 ## [Earlier]
 
 ### Added
